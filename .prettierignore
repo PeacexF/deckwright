@@ -1,0 +1,6 @@
+node_modules/
+deck-output/
+package-lock.json
+.github/notes/
+# prose is formatted by hand
+*.md
