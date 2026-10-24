@@ -33,3 +33,6 @@ dist-ssr
 *.sw?
 notes/
 deck-output/
+
+# local real runs
+tmp/

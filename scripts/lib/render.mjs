@@ -1,6 +1,6 @@
 // PPTX -> PDF -> PNG pages -> contact sheet. LibreOffice is the reference renderer.
 import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -15,11 +15,25 @@ const run = promisify(execFile);
  * otherwise conversion silently does nothing while the LibreOffice app is open.
  * HTML input is forced through the Writer import filter: the default opens it in
  * Writer/Web and the "ODT" comes out as a web document (mimetype text-web).
+ * `locale` (e.g. "ru-RU") renders as a viewer in that locale would see the deck: chart number
+ * formats take their decimal separator from it ("84,6" vs "84.6"). Neither the chart's own
+ * language nor LC_ALL changes that in LibreOffice — only the profile's locale setting does.
  */
-export async function convert(input, outDir, format = "pdf") {
+export async function convert(input, outDir, format = "pdf", { locale } = {}) {
   mkdirSync(outDir, { recursive: true });
   const soffice = tools.soffice();
   const profile = mkdtempSync(join(tmpdir(), "deck-lo-"));
+  if (locale) {
+    mkdirSync(join(profile, "user"), { recursive: true });
+    writeFileSync(
+      join(profile, "user", "registrymodifications.xcu"),
+      `<?xml version="1.0" encoding="UTF-8"?>
+<oor:items xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<item oor:path="/org.openoffice.Setup/L10N"><prop oor:name="ooSetupSystemLocale" oor:op="fuse"><value>${locale}</value></prop></item>
+</oor:items>
+`,
+    );
+  }
   const infilter = /\.html?$/i.test(input) ? ["--infilter=HTML (StarWriter)"] : [];
   const env = { ...process.env, FONTCONFIG_FILE: fontconfigFile(soffice) };
   try {

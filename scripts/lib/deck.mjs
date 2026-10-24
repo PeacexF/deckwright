@@ -39,6 +39,7 @@ const COMPONENTS = [
   "bibliography",
   "table",
   "chart",
+  "flow",
   "quote",
   "rule",
   "spacer",
@@ -458,6 +459,7 @@ export class Deck {
   manifest() {
     return {
       title: this.meta.title,
+      language: this.meta.language,
       theme: this.theme.name,
       size: { w: this.W, h: this.H },
       expected: this.meta.slides ?? null,

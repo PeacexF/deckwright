@@ -436,6 +436,7 @@ export function table(ctx, rows, opts = {}) {
       const isHead = ri === 0 && head;
       const p = paragraphs(ctx, cc.text, {
         role: isHead ? "tableHead" : (opts.role ?? "tableBody"),
+        size: isHead ? undefined : opts.size,
         bold: cc.bold,
         color: cc.color ?? (isHead ? "onPrimary" : undefined),
         align: cc.align ?? opts.align?.[ci],
@@ -484,6 +485,67 @@ export function chart(ctx, type, data, opts = {}) {
     grow: opts.h == null,
     measure: () => opts.h ?? 3,
     place: (b) => [{ kind: "chart", type, data, x: b.x, y: b.y, w: b.w, h: opts.h ?? b.h, opts, theme: ctx.theme }],
+  };
+}
+
+/**
+ * Steps joined by arrows: a process, a chain of reasoning, a hierarchy of norms.
+ * steps: [{ label, title, text, fill, dark, arrow }] — `arrow` labels the arrow to the next step.
+ * opts.direction: "right" (default) or "down"; opts.gap: space taken by each arrow.
+ */
+export function flow(ctx, steps, opts = {}) {
+  const down = opts.direction === "down";
+  const gap = opts.gap ?? (down ? 0.42 : 0.55);
+  const cards = steps.map((st) =>
+    card(
+      ctx,
+      { label: st.label, title: st.title, text: st.text, fill: st.fill ?? opts.fill ?? "track", dark: st.dark },
+      { pad: opts.pad ?? 0.16, role: opts.role },
+    ),
+  );
+  const arrowLabels = steps.map(
+    (st) => st.arrow && text(ctx, st.arrow, { role: "caption", align: down ? "left" : "center" }),
+  );
+  const stroke = color(ctx.theme, opts.arrowColor ?? "muted");
+  const arrow = (x1, y1, x2, y2) => ({ kind: "line", x1, y1, x2, y2, color: stroke, width: 1.5, arrow: true });
+  if (down) {
+    const hs = (w) => cards.map((c) => c.measure(w));
+    return {
+      measure: (w) => sum(hs(w)) + gap * (steps.length - 1),
+      place(b) {
+        const out = [];
+        let y = b.y;
+        hs(b.w).forEach((h, i) => {
+          out.push(...cards[i].place(new Box(b.x, y, b.w, h)));
+          if (i < steps.length - 1) {
+            const cx = b.x + 0.35;
+            out.push(arrow(cx, y + h + 0.05, cx, y + h + gap - 0.05));
+            if (arrowLabels[i])
+              out.push(...arrowLabels[i].place(new Box(cx + 0.2, y + h + (gap - 0.22) / 2, b.w - 0.6, 0.22)));
+          }
+          y += h + gap;
+        });
+        return out;
+      },
+    };
+  }
+  const cols = (w) => new Box(0, 0, w, 0).cols(steps.length, gap);
+  const tallest = (w) => Math.max(...cols(w).map((c, i) => cards[i].measure(c.w)));
+  return {
+    measure: (w) => tallest(w),
+    place(b) {
+      const out = [];
+      const h = tallest(b.w);
+      b.cols(steps.length, gap).forEach((c, i) => {
+        out.push(...cards[i].place(new Box(c.x, b.y, c.w, h)));
+        if (i < steps.length - 1) {
+          const y = b.y + h / 2;
+          out.push(arrow(c.x2 + 0.07, y, c.x2 + gap - 0.07, y));
+          if (arrowLabels[i]) out.push(...arrowLabels[i].place(new Box(c.x2, y - 0.3, gap, 0.25)));
+        }
+      });
+      return out;
+    },
   };
 }
 

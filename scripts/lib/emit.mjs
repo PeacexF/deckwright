@@ -1,5 +1,6 @@
 // Turn layout elements into PptxGenJS calls. Shared by the free-design and template backends
 // (pptx-automizer hands its generate() callback the same PptxGenJS slide API).
+import { contrast } from "./theme.mjs";
 
 const runOptions = (r, p, lang) => ({
   fontFace: r.style.face,
@@ -30,14 +31,25 @@ export function textRuns(paras, lang) {
   return out;
 }
 
+/** White or ink, whichever stays most readable on every series colour (labels sit inside the bars). */
+function labelColor(colors, ink) {
+  const worst = (c) => Math.min(...colors.map((f) => contrast(c, f)));
+  return worst("FFFFFF") >= worst(ink) ? "FFFFFF" : ink;
+}
+
 function chartOptions(el) {
   const t = el.theme;
   const o = el.opts;
   const body = t.roles.small;
   const values = el.data.flatMap((s) => s.values);
   const decimals = o.decimals ?? (values.some((v) => !Number.isInteger(v)) ? 1 : 0);
-  const format = o.format ?? (decimals ? `0.${"0".repeat(decimals)}` : "0");
+  const number = decimals ? `0.${"0".repeat(decimals)}` : "0";
+  // Values too small to hold a label get none: a "1.0" squeezed onto a 1 % segment spills over it.
+  // The decimal separator follows the viewer's locale (and the deck's language in QA renders).
+  const hideBelow = o.hideBelow ?? (o.stacked ? 2 : null);
+  const format = o.format ?? (hideBelow != null ? `[<${hideBelow}]"";${number}` : number);
   const colors = (o.colors ?? ["primary", "accent", "tint", "muted"]).map((c) => t.palette[c] ?? c);
+  const inside = o.stacked || el.type === "pie" || el.type === "doughnut";
   const base = {
     x: el.x,
     y: el.y,
@@ -49,7 +61,7 @@ function chartOptions(el) {
     dataLabelFormatCode: format,
     dataLabelFontFace: body.face,
     dataLabelFontSize: o.labelSize ?? 12,
-    dataLabelColor: t.palette.ink,
+    dataLabelColor: inside ? labelColor(colors, t.palette.ink) : t.palette.ink,
     showLegend: o.legend ?? el.data.length > 1,
     legendFontFace: body.face,
     legendFontSize: 12,
@@ -61,12 +73,12 @@ function chartOptions(el) {
       showPercent: o.percent ?? false,
       showLegend: o.legend ?? true,
       holeSize: o.holeSize ?? 55,
-      dataLabelColor: "FFFFFF",
     };
   }
   return {
     ...base,
     barDir: el.type === "bar" ? "bar" : "col",
+    ...(o.stacked ? { barGrouping: o.stacked === "percent" ? "percentStacked" : "stacked" } : {}),
     // horizontal bar charts list categories bottom-up by default; read top-down instead
     ...(el.type === "bar" ? { catAxisOrientation: "maxMin", valAxisOrientation: "minMax" } : {}),
     catAxisLabelFontFace: body.face,
@@ -77,8 +89,9 @@ function chartOptions(el) {
     valAxisHidden: o.valueAxis !== true,
     valAxisLabelFormatCode: format,
     valGridLine: { style: "none" },
-    barGapWidthPct: o.gap ?? 60,
-    dataLabelPosition: el.type === "line" ? "t" : "outEnd",
+    barGapWidthPct: o.gap ?? (o.stacked ? 45 : 60),
+    // stacked segments can only carry their labels inside
+    dataLabelPosition: el.type === "line" ? "t" : o.stacked ? "ctr" : "outEnd",
     lineDataSymbolSize: 8,
   };
 }
@@ -115,7 +128,7 @@ export function emit(slide, pptx, elements, { lang = "en-US", images = new Map()
           y: el.y1,
           w: Math.max(el.x2 - el.x1, 0),
           h: Math.max(el.y2 - el.y1, 0),
-          line: { color: el.color, width: el.width },
+          line: { color: el.color, width: el.width, ...(el.arrow ? { endArrowType: "triangle" } : {}) },
         });
         break;
       case "image":

@@ -321,7 +321,7 @@ export async function runQa(pptx, { manifest = null, outDir }) {
   }
 
   // render
-  const pdf = await convert(pptx, outDir);
+  const pdf = await convert(pptx, outDir, "pdf", { locale: manifest?.language });
   const { stdout: xml } = await run(tools.pdftotext(), ["-bbox", pdf, "-"], { maxBuffer: 64 << 20 });
   const pages = parseBbox(xml);
   if (pages.length !== slides.length)
