@@ -1,12 +1,12 @@
 // PPTX -> PDF -> PNG pages -> contact sheet. LibreOffice is the reference renderer.
 import { execFile } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, existsSync, renameSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import sharp from "sharp";
-import { tools } from "./tools.mjs";
+import { fontconfigFile, tools } from "./tools.mjs";
 
 const run = promisify(execFile);
 
@@ -18,11 +18,13 @@ const run = promisify(execFile);
  */
 export async function convert(input, outDir, format = "pdf") {
   mkdirSync(outDir, { recursive: true });
+  const soffice = tools.soffice();
   const profile = mkdtempSync(join(tmpdir(), "deck-lo-"));
   const infilter = /\.html?$/i.test(input) ? ["--infilter=HTML (StarWriter)"] : [];
+  const env = { ...process.env, FONTCONFIG_FILE: fontconfigFile(soffice) };
   try {
     await run(
-      tools.soffice(),
+      soffice,
       [
         `-env:UserInstallation=${pathToFileURL(profile).href}`,
         "--headless",
@@ -34,7 +36,7 @@ export async function convert(input, outDir, format = "pdf") {
         outDir,
         input,
       ],
-      { timeout: 180000 },
+      { timeout: 180000, env },
     );
   } finally {
     rmSync(profile, { recursive: true, force: true });

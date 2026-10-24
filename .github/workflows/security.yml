@@ -1,4 +1,4 @@
-name: Security [claude-deck]
+name: Security [deckwright]
 
 on:
   push:

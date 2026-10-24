@@ -1,4 +1,4 @@
-name: ci [claude-deck]
+name: ci [deckwright]
 
 on:
   push:

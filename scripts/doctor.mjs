@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Check that everything claude-deck needs is installed. Exit 1 if anything required is missing.
+// Check that everything deckwright needs is installed. Exit 1 if anything required is missing.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";

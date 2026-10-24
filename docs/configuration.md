@@ -2,15 +2,15 @@
 
 ## Requirements
 
-claude-deck targets macOS (Apple Silicon).
+deckwright targets macOS (Apple Silicon).
 
 | Tool | Used for | Install |
 | --- | --- | --- |
-| Node.js 20+ | everything | `brew install node` |
+| Node.js 22+ | everything | `brew install node` |
 | LibreOffice | PPTX → PDF, HTML → ODT; the reference renderer | `brew install --cask libreoffice` |
 | Poppler (`pdftoppm`, `pdftotext`, `pdfinfo`) | page images, rendered text positions for QA | `brew install poppler` |
 
-npm packages (installed by `npm ci`): `pptxgenjs`, `pptx-automizer` (university templates), `sharp` (images, contact sheets), `fontkit` (text measurement), `jszip`.
+npm packages (installed by `npm ci`): `pptxgenjs`, `pptx-automizer` (templates), `sharp` (images, contact sheets), `fontkit` (text measurement), `jszip`.
 
 ## Setup
 

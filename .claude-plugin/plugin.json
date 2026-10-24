@@ -1,0 +1,12 @@
+{
+  "name": "deckwright",
+  "description": "Researched, well-designed presentations as editable PPTX — from a brief, documents or an assignment; free design, a .potx template, or the style of example decks. Measured layout before rendering, QA on the real LibreOffice render. Presets for specific conventions (e.g. Russian university reports).",
+  "version": "0.1.0",
+  "author": {
+    "name": "Peace"
+  },
+  "homepage": "https://github.com/PeacexF/deckwright",
+  "repository": "https://github.com/PeacexF/deckwright",
+  "license": "MIT",
+  "keywords": ["presentation", "pptx", "slides", "powerpoint", "templates", "qa"]
+}

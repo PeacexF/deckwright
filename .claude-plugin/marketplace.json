@@ -1,0 +1,18 @@
+{
+  "name": "deckwright",
+  "owner": {
+    "name": "Peace"
+  },
+  "metadata": {
+    "description": "deckwright plugin, installable straight from this repository"
+  },
+  "plugins": [
+    {
+      "name": "deckwright",
+      "source": "./",
+      "description": "Researched, well-designed presentations as editable PPTX, with measured layout and QA on the real render.",
+      "version": "0.1.0",
+      "category": "productivity"
+    }
+  ]
+}

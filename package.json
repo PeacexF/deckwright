@@ -1,5 +1,5 @@
 {
-  "name": "claude-deck",
+  "name": "deckwright",
   "version": "0.1.0",
   "private": true,
   "description": "Claude Code plugin: researched, verified presentations as editable PPTX",
@@ -19,6 +19,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.12",
     "fontkit": "^2.0.4",
     "jszip": "^3.10.2",
     "pptx-automizer": "^0.9.4",
